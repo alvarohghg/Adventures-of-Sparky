@@ -1,0 +1,469 @@
+-- Player logic
+
+-- these are the tweaks for the mechanics, feel free to change them for a different feeling
+-- max speed right/left
+local broadcast = require "assets/ludobits/m/broadcast"
+
+local MAX_GROUND_SPEED = 100
+local MAX_AIR_SPEED = 80
+-- max fall speed
+local MAX_FALL_SPEED = 500
+
+-- gravity pulling the player down in pixel units
+local GRAVITY = -500
+-- take-off speed when jumping in pixel units
+local JUMP_TAKEOFF_SPEED = 240
+local DOUBLEJUMP_TAKEOFF_SPEED = 200
+-- push-back when shooting
+local RECOIL = 500
+
+-- pre-hashing ids improves performance
+local CONTACT_POINT_RESPONSE = hash("contact_point_response")
+local GROUND = hash("ground")
+local RESPAWMN = hash("respawn")
+local ENEMY = hash("enemy")
+local TELEPORT = hash("teleport")
+local BLUE_KEY = hash("blue_key")
+local PURPLE_KEY = hash("purple_key")
+--water/lamp/battery/switch variables
+local WATER_ENEMY = hash("water_enemy")
+local LAMP_ENEMY = hash("lamp_enemy")
+local SWITCHABLE_LIGHT = hash("switchable_light")
+local OLD_LAMP_ENEMY = hash("old_lamp_enemy")
+local BATTERY = hash("battery")
+local LIFE=6
+local HP_SPRITE = "hp#sprite"
+local SWITCH = hash("switch")
+
+local LEFT = hash("left")
+local RIGHT = hash("right")
+local JUMP = hash("jump")
+local CHANGE = hash("change")
+local INTERACT = hash("interact")
+
+
+local ANIM_WALK_BLUE = hash("Blue_Walk")
+local ANIM_IDLE_BLUE = hash("Blue_Idle")
+local ANIM_JUMP_BLUE = hash("Blue_Jumping")
+local ANIM_FALL_BLUE = hash("Blue_Fall")
+
+local ANIM_WALK_PURPLE = hash("Purple_Walk")
+local ANIM_IDLE_PURPLE = hash("Purple_Idle")
+local ANIM_JUMP_PURPLE = hash("Purple_Jumping")
+local ANIM_FALL_PURPLE = hash("Purple_Fall")
+
+local ANIM_WALK
+local ANIM_IDLE
+local ANIM_JUMP
+local ANIM_FALL
+
+
+local SPRITE = "visuals#sprite"
+
+-- flag to set colour and teleport state
+local COLOUR = 0 -- 0 = blue 1 = purple
+local COLOUR_PLATFORM = hash("purple_platforms")
+local TELEPORT_STATE = 0 -- 0 = can teleport 1= not able to teleport 
+
+-- locations of teleport locations
+-- local teleport1
+-- local teleport2
+
+
+
+
+local function play_animation(self, anim)
+	-- only play animations which are not already playing
+	if self.anim ~= anim then
+		-- tell the sprite to play the animation
+		sprite.play_flipbook(SPRITE, anim)
+		-- remember which animation is playing
+		self.anim = anim
+	end
+end
+
+local function update_animations(self)
+	if COLOUR == 0 then
+
+		ANIM_IDLE = ANIM_IDLE_BLUE
+		ANIM_WALK = ANIM_WALK_BLUE
+		ANIM_JUMP = ANIM_JUMP_BLUE
+		ANIM_FALL = ANIM_FALL_BLUE
+	elseif COLOUR == 1 then
+
+		ANIM_IDLE = ANIM_IDLE_PURPLE
+		ANIM_WALK = ANIM_WALK_PURPLE
+		ANIM_JUMP = ANIM_JUMP_PURPLE
+		ANIM_FALL = ANIM_FALL_PURPLE
+	end
+	--update the hp 
+	msg.post("main:/guis#level", "hp", {hp = self.life})
+	-- if self.life==1 then
+	-- 	sprite.play_flipbook(HP_SPRITE, "one")
+	-- elseif self.life ==2 then
+	-- 	sprite.play_flipbook(HP_SPRITE, "two")
+	-- elseif self.life ==3 then
+	-- 	sprite.play_flipbook(HP_SPRITE, "three") 
+	-- elseif self.life == 4 then
+	-- 	sprite.play_flipbook(HP_SPRITE, "four")
+	-- elseif self.life ==5 then
+	-- 	sprite.play_flipbook(HP_SPRITE, "five")
+	-- else
+	-- 	sprite.play_flipbook(HP_SPRITE, "six")
+	-- end
+
+
+
+	-- make sure the right animation is playing
+	if self.ground_contact then
+		if self.velocity.x == 0 then
+			play_animation(self, ANIM_IDLE)
+		else
+			play_animation(self, ANIM_WALK)
+		end
+	else
+		if self.velocity.y > 0 then
+			play_animation(self, ANIM_JUMP)
+		else
+			play_animation(self, ANIM_FALL)
+		end
+	end
+end
+
+-- clamp a number between a min and max value
+local function clamp(v, min, max)
+	if v < min then return min
+	elseif v > max then return max
+	else return v end
+end
+
+-- apply an opposing force to decrease a velocity
+local function decelerate(v, f, dt)
+	local opposing = math.abs(v * f)
+	if v > 0 then
+		return math.floor(math.max(0, v - opposing * dt))
+	elseif v < 0 then
+		return math.ceil(math.min(0, v + opposing * dt))
+	else
+		return 0
+	end
+end
+
+local function squish()
+	go.animate("visuals", "scale.x", go.PLAYBACK_ONCE_PINGPONG, 0.8, 
+	go.EASING_INOUTQUAD, 0.6)
+	go.animate("visuals", "scale.y", go.PLAYBACK_ONCE_PINGPONG, 1.2, 
+	go.EASING_INOUTQUAD, 0.6)
+end
+
+local function jump(self)
+	-- only allow jump from ground
+	-- (extend this with a counter to do things like double-jumps)
+	if self.ground_contact then
+		-- set take-off speed
+		self.velocity.y = JUMP_TAKEOFF_SPEED
+		-- play animation
+		play_animation(self, ANIM_JUMP)
+		sound.play("sound#jump")
+		self.ground_contact = false
+		-- compress and stretch player for visual "juice"
+		squish()
+		-- allow double jump if still moving up
+	elseif not self.double_jump and self.velocity.y > 0 then
+		self.velocity.y = self.velocity.y + 
+		DOUBLEJUMP_TAKEOFF_SPEED
+		self.double_jump = true
+		sound.play("sound#jump")
+	end
+end
+
+local function abort_jump(self)
+	-- cut the jump short if we are still going up
+	if self.velocity.y > 0 then
+		-- scale down the upwards speed
+		self.velocity.y = self.velocity.y * 0.5
+	end
+end
+
+function init(self)
+	sound.play("music#main_music")
+	-- this lets us handle input in this script
+	msg.post(".", "acquire_input_focus")
+
+	broadcast.register("teleport")
+	broadcast.register("keys_door")
+	
+
+	-- activate camera attached to the player collection
+	-- this will send camera updates to the render script
+	msg.post("camera", "acquire_camera_focus")
+
+	-- get transport location
+	
+	
+	-- spawn position
+	self.spawn_position = go.get_position()	
+	-- player velocity
+	self.velocity = vmath.vector3(0, 0, 0)
+	-- which direction the player is facing
+	self.direction = 1
+	-- support variable to keep track of collisions and separation
+	self.correction = vmath.vector3()
+	-- if the player stands on ground or not
+	self.ground_contact = true
+	-- also track state of last frame
+	-- (to detect when landing or taking off)
+	self.previous_ground_contact = true
+	-- the currently playing animation
+	self.anim = nil
+		--water/damage/battery/lamp variables
+		self.lamp_damage_timer=timer.delay(0.5, true, player_lamp_damage)
+		self.old_lamp_damage_timer=timer.delay(0.8, true, player_old_lamp_damage)
+		self.life=LIFE
+		self.lamp_contact=false
+		self.old_lamp_contact=false
+		self.respawn=false	
+		self.switch_contact=false
+		self.switchcont=0 --this is related to the swith sound
+end
+
+function update(self, dt)
+	-- apply gravity
+	self.velocity.y = self.velocity.y + GRAVITY * dt
+	self.velocity.y = clamp(self.velocity.y, -MAX_FALL_SPEED, MAX_FALL_SPEED)
+
+	-- apply ground or air friction
+	if self.ground_contact then
+		self.velocity.x = decelerate(self.velocity.x, 20, dt)
+		self.velocity.x = clamp(self.velocity.x, -MAX_GROUND_SPEED, MAX_GROUND_SPEED)
+	else
+		self.velocity.x = decelerate(self.velocity.x, 1, dt)
+		self.velocity.x = clamp(self.velocity.x, -MAX_AIR_SPEED, MAX_AIR_SPEED)
+	end
+
+	-- move player
+	local pos = go.get_position()
+	pos = pos + self.velocity * dt
+	go.set_position(pos)
+
+	-- update animations based on state (ground, air, move and idle)
+	update_animations(self)
+
+	-- reset volatile state
+	self.previous_ground_contact = self.ground_contact
+	self.correction = vmath.vector3()
+	self.ground_contact = false
+	self.wall_contact = false
+	if self.respawn==true then
+		-- broadcast a "respawn" message to anyone listening (the content does not matter)
+		broadcast.send("respawn", { something = 123 })
+		sound.play("sound#respawn")
+		self.switchcont=0
+		self.respawn=false
+	end
+	
+end
+local NORMAL_THRESHOLD = 0.7
+
+function player_lamp_damage(self)
+	print("LIFE=",self.life)
+	if self.lamp_contact==true then
+		self.life=self.life-1
+
+	end
+	if self.life==0 then
+		print("LIFE=",self.life)
+		go.set_position(self.spawn_position)
+		self.respawn=true
+		timer.cancel(self.lamp_damage_timer)
+		--I call the function again because when the player respawns, the timer cant work again and
+		-- the life does not resets
+		self.lamp_damage_timer=timer.delay(0.5, true, player_lamp_damage)
+		self.life=LIFE
+	end
+end
+
+function player_old_lamp_damage(self)
+	print("LIFE=",self.life)
+	if self.old_lamp_contact==true then
+		self.life=self.life-1
+	end
+	if self.life==0 then
+		
+		print("LIFE=",self.life)
+		go.set_position(self.spawn_position)
+		self.respawn=true
+		timer.cancel(self.old_lamp_damage_timer)
+		--I call the function again because when the player respawns, the timer cant work again and
+		-- the life does not resets
+		self.old_lamp_damage_timer=timer.delay(0.8, true, player_old_lamp_damage)
+		self.life=LIFE
+	end
+end
+
+local function walk(self, direction)
+	if direction ~= 0 then
+		self.direction = direction
+	end
+	if self.ground_contact then
+		self.velocity.x = MAX_GROUND_SPEED * direction
+	else
+		-- move slower in the air
+		self.velocity.x = MAX_AIR_SPEED * direction
+	end
+end
+
+function on_input(self, action_id, action)
+	if action_id == LEFT then
+		walk(self, -action.value)
+	elseif action_id == RIGHT then
+		walk(self, action.value)
+	elseif action_id == JUMP then
+		if action.pressed then
+			jump(self)
+		elseif action.released then
+			abort_jump(self)
+		end
+	elseif action_id == INTERACT then
+		if self.switch_contact==true then
+			-- broadcast a "interact" message to anyone listening (the content does not matter)
+			broadcast.send("interact", { on = false })
+			--swith only make the sound once
+			if not(self.switchcont>0) then
+				sound.play("sound#switch")
+				self.switchcont=self.switchcont+1
+			end
+		end
+	elseif action_id == CHANGE then
+		if action.released then
+			if COLOUR == 0 then
+				COLOUR = 1
+				COLOUR_PLATFORM = hash("blue_platforms")
+			elseif COLOUR == 1 then
+				COLOUR =0
+				COLOUR_PLATFORM = hash("purple_platforms")				
+			end
+		end
+	end
+	self.switch_contact=false
+	
+end
+
+
+-- https://defold.com/manuals/physics/#resolving-kinematic-collisions
+local function handle_obstacle_contact(self, normal, distance)
+	if normal.y < NORMAL_THRESHOLD and normal.y > -NORMAL_THRESHOLD then
+		normal.y = 0
+	end
+	if normal.x < NORMAL_THRESHOLD and normal.x > -NORMAL_THRESHOLD then
+		normal.x = 0
+	end
+	-- update distance in case the normals have changed
+	distance = distance * vmath.length(normal)
+	if distance > 0 then
+		-- First, project the accumulated correction onto
+		-- the penetration vector
+		local proj = vmath.project(self.correction, normal * distance)
+		if proj < 1 then
+			-- Only care for projections that does not overshoot.
+			local comp = (distance - distance * proj) * normal
+			-- Apply compensation
+			go.set_position(go.get_position() + comp)
+			-- Accumulate correction done
+			self.correction = self.correction + comp
+		end
+	end
+
+	-- collided with a wall
+	-- stop horizontal movement
+	if math.abs(normal.x) > 0.7 then
+		self.wall_contact = true
+		self.velocity.x = 0
+	end
+	-- collided with the ground
+	-- stop vertical movement
+	if normal.y > 0.7 then
+		if not self.previous_ground_contact then
+			-- reset any "squish" that may have been applied
+			go.set("visuals", "scale", 1)
+			self.double_jump = false
+		end
+		self.ground_contact = true
+		self.velocity.y = 0
+	end
+	-- collided with the ceiling
+	-- stop vertical movement
+	if normal.y < -0.7 then
+		self.velocity.y = 0
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	-- check if we received a contact point message
+	if message_id == CONTACT_POINT_RESPONSE then
+
+	if message.group == OLD_LAMP_ENEMY then
+		self.old_lamp_contact=true
+		-- check that the object is something we consider an obstacle
+	elseif message.group == GROUND or message.group == COLOUR_PLATFORM then
+			self.lamp_contact=false
+			self.old_lamp_contact=false
+			handle_obstacle_contact(self, message.normal, message.distance)
+		elseif message.group == RESPAWMN or message.group == ENEMY  or message.group == SWITCHABLE_LIGHT then
+			self.respawn=true
+			go.set_position(self.spawn_position)
+			self.life=LIFE
+			-- Send message to batteries to make them respawn
+		elseif message.group == LAMP_ENEMY then
+			self.lamp_contact=true
+		elseif message.group == BATTERY then
+			sound.play("sound#battery")
+			go.get_position()
+			if self.life<6 then
+				self.life=self.life+1
+			end
+		elseif message.group == SWITCH then
+			self.switch_contact=true
+			
+		elseif message.group == BLUE_KEY then
+			print("got blue key")
+			broadcast.send( "keys_door", {blue_key = true})
+			sound.play("sound#key")
+		elseif message.group == PURPLE_KEY then
+			broadcast.send( "keys_door", {purple_key = true})
+			print("got Purple key")
+			sound.play("sound#key")
+		-- elseif message.group == hash('door') then
+		-- 	print("end")
+		
+		end
+
+
+
+		
+	elseif message_id == hash("trigger_response") then
+		if message.enter then
+			-- take action for entry of teleport
+			if (message.other_id == hash("/teleport/go") or message.other_id == hash("/teleport1/go")) and TELEPORT_STATE == 0 then
+				broadcast.send( "teleport", {teleport_loc = message.other_id})
+				TELEPORT_STATE = 1
+				sound.play("sound#teleport")
+			end
+		else
+			-- take action for exit of teleport
+			TELEPORT_STATE = 0
+		end
+	
+	end
+
+	if message_id == hash("teleport_to") then
+		go.set_position(message.teleport_to)
+
+	end
+end
+
+
+function final(self)
+	broadcast.unregister("keys_door")
+	broadcast.unregister("teleport")
+end

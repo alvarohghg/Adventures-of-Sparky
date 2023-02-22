@@ -1,0 +1,7 @@
+images {
+  image: "/assets/images/level/149327-sunset-pixel-art-pixels-city-sky-skyline-16-bit.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+margin: 0
+extrude_borders: 2
+inner_padding: 0

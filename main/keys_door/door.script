@@ -1,0 +1,55 @@
+local broadcast = require "assets/ludobits/m/broadcast"
+local CONTACT_POINT_RESPONSE = hash("contact_point_response")
+local PLAYER = hash("player")
+local exitflag=false
+function init(self)
+	
+	broadcast.register("keys_door")
+	blue_key =false
+	purple_key = false
+
+end
+
+function on_message(self, message_id, message, sender)
+	-- print(message.group)
+	-- print(message_id)
+	if message_id == hash("keys_door") then
+		-- take action for entry of teleport
+		if message.blue_key == true then
+			blue_key = true
+			sprite.play_flipbook("/door/topLeftDoor#sprite", hash("topLeftBlueLockedDoor"))
+			sprite.play_flipbook("/door/bottomLeftDoor#sprite", hash("bottomleftBlueDoor"))
+			
+		end
+		if message.purple_key == true then
+			purple_key = true
+			sprite.play_flipbook("/door/topRightDoor#sprite", hash("topRightPurpleLockedDoor"))
+			sprite.play_flipbook("/door/bottomRightDoor#sprite", hash("bottomRightPurpleDoor"))
+		end
+	end
+
+	if purple_key and blue_key then
+		sprite.play_flipbook("/door/topLeftDoor#sprite", hash("topLeftBlueOpenDoor"))
+		sprite.play_flipbook("/door/topRightDoor#sprite", hash("topRightPurpleOpenDoor"))
+
+		if message_id == CONTACT_POINT_RESPONSE then
+
+			-- check that the object is something we consider an obstacle
+			if message.group == PLAYER then
+				if exitflag==false then
+					sound.play("sound#exit")
+					exitflag=true
+				end
+				print("end")
+				msg.post("main:/guis#level", "level_completed")                 -- [1]
+				
+			end
+		end
+				
+	end
+
+end
+
+function final(self)
+	broadcast.unregister("keys_door")
+end

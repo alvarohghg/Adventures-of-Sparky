@@ -1,0 +1,9 @@
+
+local BACKGROUND_COLOR = vmath.vector4(255/255, 87/255, 255/255, 255/255)
+local broadcast = require "assets/ludobits/m/broadcast"
+
+function init(self)
+	msg.post("@render:", "clear_color", { color = BACKGROUND_COLOR })
+	msg.post("@render:", "use_fixed_projection",
+	{ zoom = 3, near = -10, far = 10 })
+end

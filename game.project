@@ -1,0 +1,32 @@
+[project]
+title = game dev project
+
+[bootstrap]
+main_collection = /main/main.collectionc
+
+[input]
+game_binding = /input/game.input_bindingc
+use_accelerometer = 0
+
+[display]
+width = 1280
+height = 720
+
+[script]
+shared_state = 1
+
+[osx]
+app_icon = /assets/app_icons/appicon.icns
+
+[android]
+input_method = HiddenInputField
+
+[physics]
+gravity_y = -1000.0
+scale = 0.01
+debug = 0
+
+[graphics]
+default_texture_min_filter = nearest
+default_texture_mag_filter = nearest
+

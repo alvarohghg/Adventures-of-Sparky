@@ -1,0 +1,26 @@
+local broadcast = require "assets/ludobits/m/broadcast"
+local teleport1
+local teleport2
+
+function init(self)
+	teleport =  go.get_position("/teleport/go")
+	teleport1 =  go.get_position("/teleport1/go")
+	broadcast.register("teleport")
+	
+	
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("teleport") then
+	-- take action for entry of teleport
+	if message.teleport_loc == hash("/teleport/go") then
+		msg.post("/player/player#player", "teleport_to", {teleport_to = teleport1})
+	elseif message.teleport_loc == hash("/teleport1/go") then
+			msg.post("/player/player#player", "teleport_to", {teleport_to = teleport})
+		end
+	end
+end
+
+function final(self)
+	broadcast.unregister("teleport")
+end

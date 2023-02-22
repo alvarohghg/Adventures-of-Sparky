@@ -1,0 +1,26 @@
+local PLAYER = hash("player")
+-- receiver_a.script
+local broadcast = require "assets/ludobits/m/broadcast"
+
+function init(self)
+	broadcast.register("interact")
+	broadcast.register("respawn")
+	self.spawn_position = go.get_position()
+end
+
+function on_message(self, message_id, message, sender)
+
+	if message_id == hash("interact") then
+		-- handle message "respawn"
+		if message.on == false then
+			go.set_position(vmath.vector3(-1000, -1000, 0))
+		end
+	elseif message_id == hash("respawn") then
+		-- handle message "respawn"
+		go.set_position(self.spawn_position)
+	end
+end
+function final(self)
+	broadcast.unregister("interact")
+	broadcast.unregister("respawn")
+end

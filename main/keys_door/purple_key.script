@@ -1,0 +1,19 @@
+local broadcast = require "assets/ludobits/m/broadcast"
+function init(self)
+	broadcast.register("keys_door")
+
+
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("keys_door") then
+		-- take action for entry of teleport
+		if message.purple_key == true then
+			go.delete()
+		end
+	end
+end
+
+function final(self)
+	broadcast.unregister("keys_door")
+end

@@ -1,0 +1,27 @@
+local SWITCH_SPRITE = "switch#sprite"
+-- receiver_a.script
+local broadcast = require "assets/ludobits/m/broadcast"
+
+function init(self)
+	broadcast.register("interact")
+	broadcast.register("respawn")
+end
+
+function on_message(self, message_id, message, sender)
+	
+	if message_id == hash("interact") then
+		-- handle message "respawn"
+		if message.on == false then
+			sprite.play_flipbook(SWITCH_SPRITE, "off")
+		end
+	
+	elseif message_id == hash("respawn") then
+		-- handle message "respawn"
+		sprite.play_flipbook(SWITCH_SPRITE, "on")
+	end
+end
+function final(self)
+	broadcast.unregister("interact")
+	broadcast.unregister("respawn")
+	
+end

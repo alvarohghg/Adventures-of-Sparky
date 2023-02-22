@@ -1,0 +1,109 @@
+image: "/water_resources/map/all_terrains.png"
+tile_width: 16
+tile_height: 16
+tile_margin: 0
+tile_spacing: 0
+collision: "/water_resources/map/all_terrains.png"
+material_tag: "tile"
+convex_hulls {
+  index: 0
+  count: 0
+  collision_group: ""
+}
+convex_hulls {
+  index: 0
+  count: 0
+  collision_group: ""
+}
+convex_hulls {
+  index: 0
+  count: 0
+  collision_group: ""
+}
+convex_hulls {
+  index: 0
+  count: 0
+  collision_group: ""
+}
+convex_hulls {
+  index: 0
+  count: 4
+  collision_group: "ground"
+}
+convex_hulls {
+  index: 4
+  count: 4
+  collision_group: "ground"
+}
+convex_hulls {
+  index: 8
+  count: 6
+  collision_group: "ground"
+}
+convex_hulls {
+  index: 14
+  count: 6
+  collision_group: "ground"
+}
+convex_hulls {
+  index: 20
+  count: 0
+  collision_group: ""
+}
+convex_hulls {
+  index: 20
+  count: 0
+  collision_group: ""
+}
+convex_hulls {
+  index: 20
+  count: 0
+  collision_group: ""
+}
+convex_hulls {
+  index: 20
+  count: 0
+  collision_group: ""
+}
+convex_hulls {
+  index: 20
+  count: 5
+  collision_group: "ground"
+}
+convex_hulls {
+  index: 25
+  count: 7
+  collision_group: "ground"
+}
+convex_hulls {
+  index: 32
+  count: 6
+  collision_group: "ground"
+}
+convex_hulls {
+  index: 38
+  count: 6
+  collision_group: "ground"
+}
+collision_groups: "ground"
+animations {
+  id: "water_enemy"
+  start_tile: 13
+  end_tile: 16
+  playback: PLAYBACK_LOOP_FORWARD
+  fps: 2
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+animations {
+  id: "water_enemy2"
+  start_tile: 13
+  end_tile: 15
+  playback: PLAYBACK_LOOP_FORWARD
+  fps: 2
+  flip_horizontal: 0
+  flip_vertical: 0
+}
+extrude_borders: 2
+inner_padding: 0
+sprite_trim_mode: SPRITE_TRIM_MODE_OFF
