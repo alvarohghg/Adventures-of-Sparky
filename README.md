@@ -1,6 +1,6 @@
 # The Adventures of Sparky
 **![](https://lh3.googleusercontent.com/W7LluxbgEnH8S0eYSGWsZX1XEnD2kjVxXPGlSfCF5lSf0nXS_qmZlM46cFxq2SpPdPrpBUDYlU15zBVO5bbWpoHMqcG7xXSrTl7Jm02vPevUfYup6nYgf0bULmmHYJvRaCAz9DaK9wChE71KRG60GB0)**
-https://img.shields.io/github/repo-size/alvarohghg/Adventures-of-Sparky?style=plastic
+![GitHub repo size](https://img.shields.io/github/repo-size/alvarohghg/Adventures-of-Sparky?style=plastic)
 ## Introduction
 The purpose of this document is to serve as an approach to the development of the game **The Adventures of Sparky** as well as a tutorial of it. This project was carried out for the Game Dev course by **Alvaro Berjillos**, **Filip Gadja**, **Juan Chai** and **Brian O'Driscoll**. The executable file and the project files are included in this repository.
 
