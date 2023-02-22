@@ -64,9 +64,11 @@ Sparky will need to pick **2 keys** in order to finish each level. When the play
  4. **Interacting with the environment**
 	 Sparky will be able to reach high places thanks to the teleport system. By making contact with them, he will be teleported to platforms which could not be accessed by just jumping.
 	 
-![](https://lh6.googleusercontent.com/kJ3k1lnTpiSeEnDq2OVEo41IXQjzYd5NiaJQQcIaeyAolEOSCHbUorU-f1ZqLdRwjteGSoNKHolePl7kXcOHcuRXtHlRAwPU_eXA-AmXFwBad1JJNiK4tZ8dUPvUJHMFbgdnQpaemC1DwmiMqN0I4-U)
+**![](https://lh6.googleusercontent.com/kJ3k1lnTpiSeEnDq2OVEo41IXQjzYd5NiaJQQcIaeyAolEOSCHbUorU-f1ZqLdRwjteGSoNKHolePl7kXcOHcuRXtHlRAwPU_eXA-AmXFwBad1JJNiK4tZ8dUPvUJHMFbgdnQpaemC1DwmiMqN0I4-U)**
+
 	Some obstacles will require you to interact with buttons by pressing *E* near them, such as the *insta-kill lamps*:
-	![](https://lh4.googleusercontent.com/O0rUtdbyhn_Jb9EHFcRtjEA52St-gsIcbZ1dLkkfkvJ3rzdDE9liVkXTjjC9RBoymeKdNfpoklKKTchAFjv0wsdEBXyvCjv-sY7uPKDMvbLrb8mYCWFGY2sNh8L6bicnNnQRDHQ2c1wb6Y2OJPA0S4E)
+	
+	**![](https://lh4.googleusercontent.com/O0rUtdbyhn_Jb9EHFcRtjEA52St-gsIcbZ1dLkkfkvJ3rzdDE9liVkXTjjC9RBoymeKdNfpoklKKTchAFjv0wsdEBXyvCjv-sY7uPKDMvbLrb8mYCWFGY2sNh8L6bicnNnQRDHQ2c1wb6Y2OJPA0S4E)**
 
 ### Level 1
 In the first level, Sparky needs to collect the 2 batteries. Firstly, the player will need to test its agility by jumping the first platforms, surrounded by deadly *water* blocks.
