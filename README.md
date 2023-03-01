@@ -5,6 +5,7 @@
 
 <img alt="Author" src="https://img.shields.io/badge/Author-Simon%20Tatham-green">
 <img alt="Available" src="https://img.shields.io/badge/Available-Windows%20--%20MacOS%20--%20Unix-yellowgreen">
+<img alt="License" src="https://img.shields.io/badge/License-MIT-red">
 
 ## Downloads and Useful links
 
